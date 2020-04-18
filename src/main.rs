@@ -1,4 +1,5 @@
 mod hypergraph;
+mod json;
 
 use clap::{App, Arg, crate_name, crate_version, crate_description};
 use log::{debug, error, Level};
