@@ -87,3 +87,18 @@ fn new_edge(src: &BigUint, dst: &BigUint) -> Value {
 
     Value::Object(edge)
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::hypergraph::{DirectedGraph, DirectedHyperGraph};
+
+    #[test]
+    fn smoke_json() {
+        let hg = DirectedHyperGraph::ternary_self_loop();
+        let unrolled = hg.unroll_to_graph();
+
+        let json = serde_json::to_string_pretty(&to_sigma_json(unrolled)).expect("wtf");
+        println!("{}", json);
+    }
+}
