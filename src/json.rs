@@ -2,6 +2,7 @@
 
 use num::bigint::BigUint;
 use num::{One, Zero};
+use rand::random;
 use serde_json::map::Map;
 use serde_json::Value;
 
@@ -35,6 +36,7 @@ pub fn to_sigma_json(graph: DirectedGraph) -> Value {
 
     root.insert("nodes".to_string(), Value::Array(nodes));
 
+    // Add edges to array
     let mut edges: Vec<Value> = Vec::new();
 
     for (src, dst) in graph.edges().iter() {
@@ -59,7 +61,7 @@ fn new_node(id: &BigUint, label: Option<&str>) -> Value {
         node.insert("label".to_string(), Value::String(label.to_string()));
     }
 
-    node.insert("size".to_string(), Value::String(format!("{}", 1u32)));
+    node.insert("size".to_string(), Value::Number(1.into()));
 
     Value::Object(node)
 }
@@ -71,9 +73,10 @@ fn new_edge(src: &BigUint, dst: &BigUint) -> Value {
     edge.insert(
         "id".to_string(),
         Value::String(format!(
-            "e{}..{}",
+            "e{}..{}-{}",
             src.to_str_radix(16),
-            dst.to_str_radix(16)
+            dst.to_str_radix(16),
+            hex::encode(random::<u64>().to_string())
         )),
     );
     edge.insert(
