@@ -1,7 +1,7 @@
 //! Hypergraph data structure and utilities
 
-use num_bigint::BigUint;
-use num_traits::Zero;
+use num::bigint::BigUint;
+use num::Zero;
 use rayon::prelude::*;
 
 /// A list of relations describing a hypergraph.
@@ -33,8 +33,8 @@ impl DirectedHyperGraph {
         let mut bin_rels: Vec<(BigUint, BigUint)> = Vec::new();
 
         for rel in self.0.iter() {
-            let mut new_rels: Vec<(BigUint, BigUint)> = Vec::new(); 
-            
+            let mut new_rels: Vec<(BigUint, BigUint)> = Vec::new();
+
             let mut rel_iter = rel.iter().peekable();
             while let Some(vertex) = rel_iter.next() {
                 if let Some(vertex_1) = rel_iter.peek() {

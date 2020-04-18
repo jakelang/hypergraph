@@ -1,9 +1,9 @@
 //! Utilities for serializing graphs to render using Sigma.js
 
-use num_bigint::BigUint;
-use num_traits::{Zero, One};
-use serde_json::Value;
+use num::bigint::BigUint;
+use num::{One, Zero};
 use serde_json::map::Map;
+use serde_json::Value;
 
 use crate::hypergraph::DirectedGraph;
 
@@ -16,27 +16,32 @@ pub fn to_sigma_json(graph: DirectedGraph) -> Value {
     let mut nodes: Vec<Value> = Vec::new();
 
     // Find highest node number
-    let node_top: &BigUint = graph.edges()
-        .iter()
-        .fold(&Zero::zero(), |acc: &BigUint, (lhs, rhs)| {
-            match (lhs > acc, rhs > acc, lhs > rhs) {
-                (false, false, _) => acc,
-                (true, _, true) => lhs,
-                (_, true, false) => rhs,
-                (_, _, _) => panic!("ints don't work like that idiot"),
-            }
-        });
+    let mut node_top: BigUint = BigUint::new(vec![0]);
+    for (lhs, rhs) in graph.edges().iter() {
+        if node_top < *lhs {
+            node_top = lhs.clone();
+        }
+        if node_top < *rhs {
+            node_top = rhs.clone();
+        }
+    }
 
     // Add nodes to array
-    let mut i: BigUint = Zero::zero();
-    while i <= *node_top {
+    let mut i = BigUint::new(vec![0]);
+    while i <= node_top {
         nodes.push(new_node(&i, None));
-        i = i + One::one();
+        i = i + BigUint::new(vec![1]);
     }
 
     root.insert("nodes".to_string(), Value::Array(nodes));
 
     let mut edges: Vec<Value> = Vec::new();
+
+    for (src, dst) in graph.edges().iter() {
+        edges.push(new_edge(src, dst));
+    }
+
+    root.insert("edges".to_string(), Value::Array(edges));
 
     Value::Object(root)
 }
@@ -45,7 +50,10 @@ pub fn to_sigma_json(graph: DirectedGraph) -> Value {
 fn new_node(id: &BigUint, label: Option<&str>) -> Value {
     let mut node: Map<String, Value> = Map::new();
 
-    node.insert("id".to_string(), Value::String(format!("n{}", id.to_str_radix(16))));
+    node.insert(
+        "id".to_string(),
+        Value::String(format!("n{}", id.to_str_radix(16))),
+    );
 
     if let Some(label) = label {
         node.insert("label".to_string(), Value::String(label.to_string()));
@@ -60,9 +68,22 @@ fn new_node(id: &BigUint, label: Option<&str>) -> Value {
 fn new_edge(src: &BigUint, dst: &BigUint) -> Value {
     let mut edge: Map<String, Value> = Map::new();
 
-    edge.insert("id".to_string(), Value::String(format!("e{}..{}", src.to_str_radix(16), dst.to_str_radix(16))));
-    edge.insert("source".to_string(), Value::String(format!("n{}", src.to_str_radix(16))));
-    edge.insert("target".to_string(), Value::String(format!("n{}", dst.to_str_radix(16))));
+    edge.insert(
+        "id".to_string(),
+        Value::String(format!(
+            "e{}..{}",
+            src.to_str_radix(16),
+            dst.to_str_radix(16)
+        )),
+    );
+    edge.insert(
+        "source".to_string(),
+        Value::String(format!("n{}", src.to_str_radix(16))),
+    );
+    edge.insert(
+        "target".to_string(),
+        Value::String(format!("n{}", dst.to_str_radix(16))),
+    );
 
     Value::Object(edge)
 }
